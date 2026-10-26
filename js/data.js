@@ -56,3 +56,7 @@ export const voituresInitiales = [
     "statut": "Disponible"
   }
 ];
+
+export const sortedVoitures = [{
+
+}];
