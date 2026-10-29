@@ -1,6 +1,6 @@
 //imports
 import {voituresInitiales} from "./data.js";
-import {composant_voiture,afficher} from "./front.js"
+import {composant_voiture,afficher, button_edite_target, target_object,modifier} from "./front.js"
 
 //input saisie
 /*VÉHICULE*/
@@ -10,7 +10,7 @@ const ajoute_input_imm = document.getElementById("immatriculation");
 const ajoute_input_category = document.getElementById("categorie");
 const ajoute_input_dhparjours = document.getElementById("prix-jour");
 const ajoute_input_status = document.getElementById("statut");
-const ajoute_button_ajouter_voiture = document.getElementById("bouton-enregistrer");
+export const ajoute_button_ajouter_voiture = document.getElementById("bouton-enregistrer");
 /*INVENTAIRE*/
 const filtre_input_recherche_voiture = document.getElementById("recherche");
 const filtre_input_status = document.getElementById("filtre-statut");
@@ -28,7 +28,7 @@ export const VEHICULE_INPUTS = [
     ajoute_input_status,
 ];
 //array of input html elements
-const INVENTAIRE_INPUTS = [
+export const INVENTAIRE_INPUTS = [
     filtre_input_recherche_voiture,
     filtre_input_status,
     filtre_input_category,
@@ -36,7 +36,7 @@ const INVENTAIRE_INPUTS = [
 ];
 
 // show default
-afficher();
+//afficher(voituresInitiales);
 
 //clear inputs
 export function clear_inputs(HTML_INPUTS) {
@@ -83,13 +83,15 @@ function ajouter() {
         categorie:voiture_inputs[3],
         prixJour:voiture_inputs[4] - 0,
         statut:voiture_inputs[5],
-        
     });
+    localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
     console.log(voituresInitiales);
 }
 
 export function supprimer(pos) {
     voituresInitiales.splice(pos,1);
+    localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
+
 }
 
 //add cars into voituresInitiales
@@ -100,9 +102,16 @@ ajoute_button_ajouter_voiture.addEventListener("click", (e) => {
         return;
     }
 
-    ajouter();
-    afficher();
+    if(button_edite_target == "") {
+        ajouter()
+    }else {
+        let latest_inputs = get_inputs(VEHICULE_INPUTS);
+        modifier(target_object,latest_inputs);
+        button_edite_target == "";
+        ajoute_button_ajouter_voiture.textContent = "Ajouter la voiture";
+    }
+
+    afficher(voituresInitiales);
     clear_inputs(VEHICULE_INPUTS);
 
 })
-//composant_voiture("dacio","Sandero","AUTO-001","Citadine","250","Louée",2);
