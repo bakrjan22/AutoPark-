@@ -56,3 +56,14 @@ export let voituresInitiales = [
     "statut": "Disponible"
   }
 ];
+
+export function charger_voitures() {
+  let sauvegarde = localStorage.getItem("voiture");
+  if (sauvegarde) {
+    voituresInitiales = JSON.parse(sauvegarde);
+  }
+}
+ 
+export function sauvegarder_voitures() {
+  localStorage.setItem("voiture", JSON.stringify(voituresInitiales));
+}
