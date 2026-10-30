@@ -1,14 +1,13 @@
 //IMPORTS
-import { voituresInitiales } from "./data.js"
+import { voituresInitiales, sauvegarder_voitures } from "./data.js"
 import {
     supprimer,
     VEHICULE_INPUTS,
     fill_inputs,
     clear_inputs,
-    get_inputs,
-    checks_inputs_valide,
     ajoute_button_ajouter_voiture,
-    INVENTAIRE_INPUTS
+    INVENTAIRE_INPUTS,
+    voiture_id
 } from "./voitures.js";
 
 const filtre_input_recherche_voiture = document.getElementById("recherche");
@@ -17,19 +16,34 @@ const filtre_input_category = document.getElementById("filtre-categorie");
 const filtre_input_trie = document.getElementById("tri-prix");
 const filtre_button_reinitialiser = document.getElementById("reinitialiser-filtres");
 
-
 const list_voiture = document.getElementById("liste-voitures");
-export let button_edite_target = ""; // "" = ajoute; !"" toggle modifier
-export let target_object = -1;
+const etat_vide = document.getElementById("etat-vide");
+const texte_etat_vide = document.getElementById("texte-etat-vide");
+const message_parc = document.getElementById("message-parc");
 
-let sortedVoitures = [];
+let button_edite_target = ""; // "" = ajoute; !"" toggle modifier
 
 export function reset_edit_mode() {
     button_edite_target = "";
-    target_object = -1;
+    voiture_id.value = "";
+    ajoute_button_ajouter_voiture.textContent = "Ajouter la voiture";
+    reinitialiser_boutons_modifier();
 }
 
-export function composant_voiture(marque, model, imm, categorie, prixpj, status, pos) {
+function reinitialiser_boutons_modifier() {
+    let boutons = document.querySelectorAll(".button-edit");
+    for (let i = 0; i < boutons.length; i++) {
+        boutons[i].textContent = "Modifier";
+    }
+}
+
+function annuler_edition() {
+    reset_edit_mode();
+    clear_inputs(VEHICULE_INPUTS);
+    afficher(voituresInitiales);
+}
+
+function composant_voiture(marque, model, imm, categorie, prixpj, status, id) {
     let tr_voiture_container = document.createElement("tr");
     list_voiture.appendChild(tr_voiture_container);
     tr_voiture_container.className = "customjs";
@@ -97,7 +111,7 @@ export function composant_voiture(marque, model, imm, categorie, prixpj, status,
     button_edite.className = "button button-edit";
     div_button_container.appendChild(button_edite);
     button_edite.textContent = "Modifier";
-    button_edite.id = String("button_edit" + pos);
+    button_edite.id = String("button_edit" + id);
 
     let button_delete = document.createElement("button");
     button_delete.className = "button button-delete";
@@ -106,26 +120,26 @@ export function composant_voiture(marque, model, imm, categorie, prixpj, status,
 
     button_delete.addEventListener("click", (e) => {
         e.preventDefault();
-        supprimer(pos),
+        supprimer(id);
+        reset_edit_mode();
         afficher(voituresInitiales);
     })
 
     button_edite.addEventListener("click", () => {
-        button_edite.textContent = "Starting";
-        button_edite_target = "button_edit" + pos;
-
-        let array_target = [{}];
-        array_target = voituresInitiales;
-
-        ajoute_button_ajouter_voiture.textContent = "Modifier";
-        for (let i = 0; i < array_target.length; i++) {
-            let button_edite_element = document.getElementById("button_edit" + pos);
-            if (button_edite_target == button_edite_element.id) {
-                button_edite_element.textContent = "Annuler";
-            } else {
-                button_edite_element.textContent = "Modifier";
-            }
+        if (button_edite_target == "button_edit" + id) {
+            annuler_edition();
+            return;
         }
+
+        let pos = voituresInitiales.findIndex(voiture => voiture.id === id);
+
+        button_edite_target = "button_edit" + id;
+        voiture_id.value = id;
+
+        reinitialiser_boutons_modifier();
+        button_edite.textContent = "Annuler";
+        ajoute_button_ajouter_voiture.textContent = "Modifier";
+
         fill_inputs(VEHICULE_INPUTS,
             [
                 voituresInitiales[pos].marque,
@@ -135,39 +149,37 @@ export function composant_voiture(marque, model, imm, categorie, prixpj, status,
                 voituresInitiales[pos].prixJour,
                 voituresInitiales[pos].statut,
             ]);
-        target_object = pos;
-
     });
 }
 
-export function modifier(pos, latest_inputs) {
-    console.log(voituresInitiales);
-    let target_array = [];
-
-    voituresInitiales[pos].marque = latest_inputs[0];
-    voituresInitiales[pos].modele = latest_inputs[1];
-    voituresInitiales[pos].immatriculation = latest_inputs[2];
-    voituresInitiales[pos].categorie = latest_inputs[3];
-    voituresInitiales[pos].prixJour = latest_inputs[4];
-    voituresInitiales[pos].statut = latest_inputs[5];
+export function modifier(id, latest_inputs) {
+    for (let i = 0; i < voituresInitiales.length; i++) {
+        if (voituresInitiales[i].id === id) {
+            voituresInitiales[i].marque = latest_inputs[0];
+            voituresInitiales[i].modele = latest_inputs[1];
+            voituresInitiales[i].immatriculation = latest_inputs[2];
+            voituresInitiales[i].categorie = latest_inputs[3];
+            voituresInitiales[i].prixJour = latest_inputs[4] - 0;
+            voituresInitiales[i].statut = latest_inputs[5];
+            break;
+        }
+    }
+    sauvegarder_voitures();
 }
-//json to string : localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
-//string to json : JSON.parse(localStorage.getItem("voiture"));
-
-// if(localStorage.getItem("voiture")){
-//     afficher(JSON.parse(localStorage.getItem("voiture")));
-// }else{
-//     localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
-//      afficher(voituresInitiales);
-// }
-
-afficher(voituresInitiales);
-
-
 
 export function afficher(voiture_array) {
     list_voiture.textContent = "";
-    
+
+    etat_vide.hidden = voiture_array.length > 0;
+    if (voiture_array.length == 0) {
+        texte_etat_vide.textContent = voiture_array === voituresInitiales
+            ? "Ajoutez une voiture ou modifiez vos critères de recherche."
+            : "Aucune voiture ne correspond à vos critères de recherche.";
+    }
+    message_parc.textContent = voiture_array.length + (voiture_array.length > 1
+        ? " voitures affichées."
+        : " voiture affichée.");
+
     for (let i = 0; i < voiture_array.length; i++) {
         composant_voiture(
             voiture_array[i].marque,
@@ -176,14 +188,12 @@ export function afficher(voiture_array) {
             voiture_array[i].categorie,
             voiture_array[i].prixJour,
             voiture_array[i].statut,
-            i
+            voiture_array[i].id
         )
     }
-    console.log(voiture_array);
 }
 
 //for sorting
-let voiture_sorted = [];
 function check_write(HTML_INPUTS) {
     for (let i = 0; i < HTML_INPUTS.length; i++) {
         if (HTML_INPUTS[i].value != "") {
@@ -194,6 +204,10 @@ function check_write(HTML_INPUTS) {
 }
 filtre_button_reinitialiser.addEventListener('click', () => {
     clear_inputs(INVENTAIRE_INPUTS);
+    filter_values.recherche = "";
+    filter_values.status = "";
+    filter_values.categorie = "";
+    filter_values.prix = "";
     afficher(voituresInitiales);
 })
 let filter_values = {
@@ -204,7 +218,7 @@ let filter_values = {
 };
 
 function get_reel_time_filter_values() {
-    filtre_input_recherche_voiture.addEventListener("keyup", () => {
+    filtre_input_recherche_voiture.addEventListener("input", () => {
         filter_values.recherche = filtre_input_recherche_voiture.value;
         sorting_process();
     })
@@ -223,55 +237,53 @@ function get_reel_time_filter_values() {
 }
 get_reel_time_filter_values();
 
-function sort_by_price(voiture_array,type) {
-    let new_array = voiture_array;
-    if(type === "dec"){
-        return new_array.sort((v1,v2) => (v2.prixJour - v1.prixJour));
-    }else {
-        return new_array.sort((v1,v2) => (v1.prixJour - v2.prixJour));
+function sort_by_price(voiture_array, type) {
+    let new_array = [...voiture_array];
+    if (type === "dec") {
+        return new_array.sort((v1, v2) => (v2.prixJour - v1.prixJour));
+    } else {
+        return new_array.sort((v1, v2) => (v1.prixJour - v2.prixJour));
     }
 }
 
 function start_sort(voiture_array) {
     let res = voiture_array;
 
-    if(filter_values.status !== "") {
+    if (filter_values.status !== "") {
         res = res.filter(voiture => {
             return voiture.statut === filter_values.status;
         })
     }
-    
-    if(filter_values.recherche !== "") {
+
+    if (filter_values.recherche !== "") {
+        let recherche = filter_values.recherche.toLowerCase();
         res = res.filter(voiture => {
-            return voiture.marque.toLowerCase().includes(filter_values.recherche.toLowerCase());
+            return voiture.marque.toLowerCase().includes(recherche)
+                || voiture.modele.toLowerCase().includes(recherche)
+                || voiture.immatriculation.toLowerCase().includes(recherche);
         })
     }
 
-    if(filter_values.categorie !== "") {
+    if (filter_values.categorie !== "") {
         res = res.filter(voiture => {
             return voiture.categorie.toLowerCase().includes(filter_values.categorie.toLowerCase());
         })
     }
-     if(filtre_input_trie.value == "croissant"){
-        res = sort_by_price(res,"c");
-     }else
-     {
-        res = sort_by_price(res,"dec");
-     }
-    console.log(filtre_input_trie.value);
-    
+
+
+    if (filter_values.prix == "croissant") {
+        res = sort_by_price(res, "c");
+    } else if (filter_values.prix == "decroissant") {
+        res = sort_by_price(res, "dec");
+    }
+
     return res;
 }
 
-export function sorting_process() {
+function sorting_process() {
     if (check_write(INVENTAIRE_INPUTS)) {
-        voiture_sorted = [];
-        voiture_sorted = voituresInitiales;
-        voiture_sorted = start_sort(voiture_sorted);
-        afficher(voiture_sorted);
-        return;
+        afficher(start_sort(voituresInitiales));
     } else {
         afficher(voituresInitiales);
     }
-    voiture_sorted = [];
 }
