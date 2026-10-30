@@ -89,6 +89,7 @@ Le tableau de bord affiche quatre indicateurs calculés dynamiquement :
 
 Site : <a href="https://bakrjan22.github.io/AutoPark-/">site web</a>
 
+Jira : <img src="https://github.com/bakrjan22/AutoPark-/blob/11f822c596320f8343f64c324cdcdd5d52d63a4f/jira.png">
 
 
 ## 📁 Structure du projet
