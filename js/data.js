@@ -67,3 +67,4 @@ export function charger_voitures() {
 export function sauvegarder_voitures() {
   localStorage.setItem("voiture", JSON.stringify(voituresInitiales));
 }
+charger_voitures();
