@@ -171,14 +171,6 @@ export function afficher(voiture_array) {
     list_voiture.textContent = "";
 
     etat_vide.hidden = voiture_array.length > 0;
-    if (voiture_array.length == 0) {
-        texte_etat_vide.textContent = voiture_array === voituresInitiales
-            ? "Ajoutez une voiture ou modifiez vos critères de recherche."
-            : "Aucune voiture ne correspond à vos critères de recherche.";
-    }
-    message_parc.textContent = voiture_array.length + (voiture_array.length > 1
-        ? " voitures affichées."
-        : " voiture affichée.");
 
     for (let i = 0; i < voiture_array.length; i++) {
         composant_voiture(
