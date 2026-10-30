@@ -35,12 +35,21 @@ export const INVENTAIRE_INPUTS = [
     filtre_input_trie,
 ];
 
+export function afficher_message(texte, est_erreur) {
+    message_formulaire.textContent = texte;
+    message_formulaire.className = est_erreur ? "feedback error" : "feedback success";
+}
+
 // show default
 //afficher(voituresInitiales);
 
 //clear inputs
 export function clear_inputs(HTML_INPUTS) {
-    for(let i = 0;i < HTML_INPUTS.length;i++){
+    for (let i = 0;i < HTML_INPUTS.length;i++){
+        let erreur = document.getElementById("erreur-" + HTML_INPUTS[i].id);
+        if (erreur) {
+            erreur.textContent = "";
+        }
         if(HTML_INPUTS[i].id == "statut"){
             continue;
         }
@@ -49,14 +58,20 @@ export function clear_inputs(HTML_INPUTS) {
 }
 //check inputs
 export function checks_inputs_valide(HTML_INPUTS) {
-    for(let i = 0;i < HTML_INPUTS.length;i++){
-        console.log(HTML_INPUTS[i].id);
-        if(HTML_INPUTS[i].value == "") {
-            alert("un des champs na pas etais saisie");
-            return false;
+    let valide = true;
+    for (let i = 0; i < HTML_INPUTS.length; i++) {
+        if (HTML_INPUTS[i].value.trim() === "") {
+            let erreur = document.getElementById("erreur-" + HTML_INPUTS[i].id);
+            if (erreur) {
+                erreur.textContent = "Ce champ est obligatoire.";
+            }
+            valide = false;
         }
     }
-}
+    if (valide == false) {
+        afficher_message("Un des champs n'a pas été saisi.", true);
+    }
+  
 //get inputs
 export function get_inputs(HTML_INPUTS) {
     let values = [];
@@ -71,12 +86,27 @@ export function fill_inputs(HTML_INPUTS,elements) {
         HTML_INPUTS[i].value = elements[i];
     }
 }
-
+function immatriculation_existe(immatriculation, id_ignore) {
+    for (let i = 0; i < voituresInitiales.length; i++) {
+        if (voituresInitiales[i].id === id_ignore) {
+            continue;
+        }
+        if (voituresInitiales[i].immatriculation.toLowerCase() === immatriculation.toLowerCase()) {
+            return true;
+        }
+    }
+    return false;
+}
 //Add car
-function ajouter() {
-    let voiture_inputs = get_inputs(VEHICULE_INPUTS);
+function ajouter(voiture_inputs) {
+    let nouvel_id = 0;
+    for (let i = 0; i < voituresInitiales.length; i++) {
+        if (voituresInitiales[i].id > nouvel_id) {
+            nouvel_id = voituresInitiales[i].id;
+        }
+    }
     voituresInitiales.push({
-        id:voituresInitiales.length + 1,
+        id:nouvel_id + 1,
         marque:voiture_inputs[0],
         modele:voiture_inputs[1],
         immatriculation:voiture_inputs[2],
@@ -84,34 +114,46 @@ function ajouter() {
         prixJour:voiture_inputs[4] - 0,
         statut:voiture_inputs[5],
     });
-    localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
-    console.log(voituresInitiales);
+    sauvegarder_voitures();
 }
 
-export function supprimer(pos) {
-    voituresInitiales.splice(pos,1);
-    localStorage.setItem("voiture",String(JSON.stringify(voituresInitiales)));
-
+export function supprimer(id) {
+    for (let i = 0; i < voituresInitiales.length; i++) {
+        if (voituresInitiales[i].id === id) {
+            voituresInitiales.splice(i,1);
+            break;
+        }
+    }
+    sauvegarder_voitures();
 }
 
 //add cars into voituresInitiales
 ajoute_button_ajouter_voiture.addEventListener("click", (e) => {
     e.preventDefault();
 
-   if(checks_inputs_valide(VEHICULE_INPUTS) == false){
+    if(checks_inputs_valide(VEHICULE_INPUTS) == false){
         return;
     }
 
-    if(button_edite_target == "") {
-        ajouter()
-    }else {
-        let latest_inputs = get_inputs(VEHICULE_INPUTS);
-        modifier(target_object,latest_inputs);
-        button_edite_target == "";
-        ajoute_button_ajouter_voiture.textContent = "Ajouter la voiture";
+    let voiture_inputs = get_inputs(VEHICULE_INPUTS);
+    let id_modifie = voiture_id.value === "" ? 0 : voiture_id.value - 0;
+
+    if (immatriculation_existe(voiture_inputs[2], id_modifie)) {
+        afficher_message("Cette immatriculation est déjà utilisée.", true);
+        return;
+    }
+
+    if (voiture_id.value === "") {
+        ajouter(voiture_inputs);
+        afficher_message("Voiture ajoutée au parc.", false);
+    } else {
+        modifier(id_modifie, voiture_inputs);
+        reset_edit_mode();
+        afficher_message("Voiture modifiée.", false);
     }
 
     afficher(voituresInitiales);
     clear_inputs(VEHICULE_INPUTS);
 
 })
+afficher(voituresInitiales);
