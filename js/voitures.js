@@ -1,6 +1,6 @@
 //imports
-import {voituresInitiales} from "./data.js";
-import {composant_voiture,afficher, button_edite_target, target_object,modifier} from "./front.js"
+import { voituresInitiales, sauvegarder_voitures } from "./data.js";
+import { afficher, modifier, reset_edit_mode } from "./front.js"
 
 //input saisie
 /*VÉHICULE*/
@@ -11,6 +11,8 @@ const ajoute_input_category = document.getElementById("categorie");
 const ajoute_input_dhparjours = document.getElementById("prix-jour");
 const ajoute_input_status = document.getElementById("statut");
 export const ajoute_button_ajouter_voiture = document.getElementById("bouton-enregistrer");
+export const voiture_id = document.getElementById("voiture-id");
+const message_formulaire = document.getElementById("message-formulaire");
 /*INVENTAIRE*/
 const filtre_input_recherche_voiture = document.getElementById("recherche");
 const filtre_input_status = document.getElementById("filtre-statut");
@@ -35,13 +37,11 @@ export const INVENTAIRE_INPUTS = [
     filtre_input_trie,
 ];
 
+//message sous le formulaire
 export function afficher_message(texte, est_erreur) {
     message_formulaire.textContent = texte;
     message_formulaire.className = est_erreur ? "feedback error" : "feedback success";
 }
-
-// show default
-//afficher(voituresInitiales);
 
 //clear inputs
 export function clear_inputs(HTML_INPUTS) {
@@ -71,7 +71,8 @@ export function checks_inputs_valide(HTML_INPUTS) {
     if (valide == false) {
         afficher_message("Un des champs n'a pas été saisi.", true);
     }
-  
+    return valide;
+}
 //get inputs
 export function get_inputs(HTML_INPUTS) {
     let values = [];
@@ -86,6 +87,7 @@ export function fill_inputs(HTML_INPUTS,elements) {
         HTML_INPUTS[i].value = elements[i];
     }
 }
+
 function immatriculation_existe(immatriculation, id_ignore) {
     for (let i = 0; i < voituresInitiales.length; i++) {
         if (voituresInitiales[i].id === id_ignore) {
@@ -97,6 +99,7 @@ function immatriculation_existe(immatriculation, id_ignore) {
     }
     return false;
 }
+
 //Add car
 function ajouter(voiture_inputs) {
     let nouvel_id = 0;
@@ -156,4 +159,6 @@ ajoute_button_ajouter_voiture.addEventListener("click", (e) => {
     clear_inputs(VEHICULE_INPUTS);
 
 })
+
+// show default
 afficher(voituresInitiales);
