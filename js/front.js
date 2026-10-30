@@ -24,6 +24,11 @@ export let target_object = -1;
 
 let sortedVoitures = [];
 
+export function reset_edit_mode() {
+    button_edite_target = "";
+    target_object = -1;
+}
+
 export function composant_voiture(marque, model, imm, categorie, prixpj, status, pos) {
     let tr_voiture_container = document.createElement("tr");
     list_voiture.appendChild(tr_voiture_container);
