@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <title>Document</title>
+</head>
+<body>
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+    <header class="site-header">
+      <div class="container header-content">
+        <a
+          class="brand"
+          href="voitures.html"
+          aria-label="AutoPark — Gestion du parc"
+        >
+          <span class="brand-mark" aria-hidden="true">A<span>.</span></span>
+          <span>AutoPark<small>ATLAS AUTO</small></span>
+        </a>
+        <nav aria-label="Navigation principale">
+          <!-- index.html est le dashboard à créer par l'apprenant. -->
+          <a href="index.html">Dashboard</a>
+          <a href="voitures.html">Gestion du parc</a>
+          <a href="malocation.html" aria-current="page">Ma location</a>
+        </nav>
+        <span class="agency-label">Agence de location</span>
+      </div>
+    </header>
+
+    <main id="contenu" class="container main-content">
+        <section class="page-intro" aria-labelledby="titre-page">
+            <p class="eyebrow">VOTRE ESPACE DE GESTION</p>
+            <h1 id="titre-page">Gestion du parc automobile</h1>
+            <p>Centralisez vos véhicules, leurs tarifs et leur disponibilité.</p>
+        </section>
+
+        <section class="status-bare">
+            <div class="status1">
+                <div id="expicon0">1</div>
+                <p id="step0">Véhicule</p>
+            </div>
+            <div class="status1">
+                <div id="expicon1">2</div>
+                <p id="step1" >Récupération</p>
+            </div>
+            <div class="status1">
+                <div id="expicon2">3</div>
+                <p id="step2">Options</p>
+            </div>
+            <div class="status1">
+                <div id="expicon3">4</div>
+                <p id="step3">Récapitulatif</p>
+            </div>
+        </section>
+
+        <section class="down-status">
+            <div class="block_container">
+                <div class="info-block" id="info-block"></div>
+                <div class="checkout-block"></div>
+                <section class="checkout-section">
+                    <div class="checkout-layout">
+                        <div class="options-block"></div>
+                            <div class="options-footer">
+                                <button type="button" class="button button-secondary" id="btn-restart">Recommencer</button>
+                                <button type="button" class="button button-primary" id="btn-next">Suivant</button>
+                            </div>
+                        <div class="summary-block"></div>
+                    </div>
+                </section>
+            </div>
+            
+        </section>
+       
+    </main>
+</body>
+</html>
+<script src="./js/malocation.js"></script>
