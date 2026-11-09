@@ -35,6 +35,7 @@ let checkout_data = {
 };
 
 let config = {
+    
     modesRecuperation: [
         { id: "agence", nom: "A l'agence", fraisFixes: 0 },
         { id: "aeroport", nom: "A l'aeroport", fraisFixes: 150 },
@@ -47,9 +48,32 @@ let config = {
 }
 
 let scope_step = 0;
-
+let voiture_choisie_id = 0;
+let recuperation_choisie_id = "";
+let nb_jours = 1;
 let btn_next = document.getElementById("btn-next");
 let btn_previous = document.getElementById("btn-restart");
+
+function fill_checkout_with_care(voiture) {
+    voiture_choisie_id = voiture.id;
+    let total = voiture.prixJour * nb_jours;
+
+    checkout_data.voiture = voiture.marque + " " + voiture.modele;
+    checkout_data.prix_voiture = voiture.categorie + " · " + voiture.prixJour + " MAD / jour";
+    checkout_data.includes_date = nb_jours + " jour(s) · dates incluses";
+
+    checkout_data.produit = [
+        ["Véhicule · " + nb_jours + " × " + voiture.prixJour + " MAD", total + " MAD"],
+        ["Récupération", "Gratuite"],
+    ];
+
+    checkout_data.totale = [
+        ["Total estimé", total + " MAD"],
+    ];
+
+    composant_checkout(checkout_data);
+}
+
 
 function update_steps() {
   for (let i = 0; i < 4; i++) {
@@ -156,6 +180,7 @@ const info_block = document.getElementById("info-block");
 
 function voiture_card() {
     info_block.textContent = "";
+
     let p_eyebrow = document.createElement("p");
     p_eyebrow.className = "step-name";
     p_eyebrow.textContent = "01 / VÉHICULE";
@@ -170,7 +195,160 @@ function voiture_card() {
     p_description.className = "step-desc";
     p_description.textContent = "Sélectionnez une voiture disponible et votre période de location.";
     info_block.appendChild(p_description);
+    let liste_voitures = JSON.parse(localStorage.getItem("voiture"));
+    if (liste_voitures == null) {
+        liste_voitures = [];
+    }
 
+    let div_liste = document.createElement("div");
+    div_liste.className = "options-list";
+    info_block.appendChild(div_liste);
+
+    let nb_disponibles = 0;
+
+    for (let i = 0; i < liste_voitures.length; i++) {
+        let voiture = liste_voitures[i];
+        if (voiture.statut == "Disponible") {
+            nb_disponibles++;
+            if (voiture_choisie_id == 0) {
+                fill_checkout_with_care(voiture);
+            }
+
+            let div_card = document.createElement("div");
+            if (voiture.id == voiture_choisie_id) {
+                div_card.className = "option-card selected";
+            } else {
+                div_card.className = "option-card";
+            }
+            div_liste.appendChild(div_card);
+
+            let div_header = document.createElement("div");
+            div_header.className = "option-header";
+            div_card.appendChild(div_header);
+
+            let span_categorie = document.createElement("span");
+            span_categorie.className = "option-tag";
+            span_categorie.textContent = voiture.categorie;
+            div_header.appendChild(span_categorie);
+
+            let div_radio = document.createElement("div");
+            div_radio.className = "option-radio";
+            div_header.appendChild(div_radio);
+
+            let p_nom = document.createElement("p");
+            p_nom.className = "option-name";
+            p_nom.textContent = voiture.marque + " " + voiture.modele;
+            div_card.appendChild(p_nom);
+
+            let p_statut = document.createElement("p");
+            p_statut.className = "option-status";
+            p_statut.textContent = voiture.statut;
+            div_card.appendChild(p_statut);
+
+            let p_prix = document.createElement("p");
+            p_prix.className = "option-price";
+            p_prix.textContent = voiture.prixJour + " MAD / jour";
+            div_card.appendChild(p_prix);
+            div_card.addEventListener("click", () => {
+                fill_checkout_with_care(voiture);
+                voiture_card();
+            });
+        }
+    }
+
+    if (nb_disponibles == 0) {
+        let p_vide = document.createElement("p");
+        p_vide.className = "step-desc";
+        p_vide.textContent = "Aucune voiture disponible pour le moment";
+        div_liste.appendChild(p_vide);
+    }
+
+    let div_dates = document.createElement("div");
+    div_dates.className = "datesBlock";
+    info_block.appendChild(div_dates);
+
+
+    let input_debut = document.createElement("input");
+    input_debut.type = "date";
+    input_debut.className = "dateInp";
+    input_debut.id = "date-debut";
+    div_dates.appendChild(input_debut);
+
+
+    let input_fin = document.createElement("input");
+    input_fin.type = "date";
+    input_fin.className = "dateInp";
+    input_fin.id = "date-fin";
+    div_dates.appendChild(input_fin);
+
+    input_debut.addEventListener("change", maj_dates);
+    input_fin.addEventListener("change", maj_dates);
+}
+
+function format_date(valeur) {
+    let mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+    let d = new Date(valeur);
+    return d.getDate() + " " + mois[d.getMonth()] + " " + d.getFullYear();
+}
+
+function generer_date(debut, fin) {
+    let d1 = new Date(debut);
+    let d2 = new Date(fin);
+    let mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+    if (d1.getMonth() == d2.getMonth() && d1.getFullYear() == d2.getFullYear()) {
+        return d1.getDate() + " → " + d2.getDate() + " " + mois[d2.getMonth()] + " " + d2.getFullYear();
+    }
+    return format_date(debut) + " → " + format_date(fin);
+}
+
+function maj_dates() {
+    let debut = document.getElementById("date-debut").value;
+    let fin = document.getElementById("date-fin").value;
+    if (debut != "" && fin != "") {
+        let d1 = new Date(debut);
+        let d2 = new Date(fin);
+        let diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (diff < 1) {
+            diff = 1;
+        }
+        nb_jours = diff;
+        checkout_data.date = generer_date(debut, fin);
+
+        let liste_voitures = JSON.parse(localStorage.getItem("voiture"));
+        if (liste_voitures == null) {
+            liste_voitures = [];
+        }
+        for (let i = 0; i < liste_voitures.length; i++) {
+            if (liste_voitures[i].id == voiture_choisie_id) {
+                fill_checkout_with_care(liste_voitures[i]);
+            }
+        }
+    }
+}
+
+
+function choisir_recuperation(mode) {
+    recuperation_choisie_id = mode.id;
+    let prix_txt = "Gratuite";
+    if (mode.fraisFixes > 0) {
+        prix_txt = mode.fraisFixes + " MAD";
+    }
+    checkout_data.produit[1] = ["Récupération · " + prix_txt];
+
+    let total_voiture = 0;
+    let liste_voitures = JSON.parse(localStorage.getItem("voiture"));
+    if (liste_voitures == null) {
+        liste_voitures = [];
+    }
+    for (let i = 0; i < liste_voitures.length; i++) {
+        if (liste_voitures[i].id == voiture_choisie_id) {
+            total_voiture = liste_voitures[i].prixJour * nb_jours;
+        }
+    }
+    let total = total_voiture + mode.fraisFixes;
+    checkout_data.totale = [["Total estimé", total + " MAD"]];
+
+    composant_checkout(checkout_data);
 }
 
 function recuperation_card() {
@@ -189,6 +367,107 @@ function recuperation_card() {
     p_description.className = "step-desc";
     p_description.textContent = "Choisissez le lieu qui vous convient.";
     info_block.appendChild(p_description);
+
+    let div_liste = document.createElement("div");
+    div_liste.className = "options-list";
+    info_block.appendChild(div_liste);
+
+    for (let i = 0; i < config.modesRecuperation.length; i++) {
+        let mode = config.modesRecuperation[i];
+        if (recuperation_choisie_id == "") {
+            choisir_recuperation(mode);
+        }
+
+        let div_card = document.createElement("div");
+        if (mode.id == recuperation_choisie_id) {
+            div_card.className = "option-card selected";
+        } else {
+            div_card.className = "option-card";
+        }
+        div_liste.appendChild(div_card);
+
+        let div_header = document.createElement("div");
+        div_header.className = "option-header";
+        div_card.appendChild(div_header);
+
+        let span_tag = document.createElement("span");
+        span_tag.className = "option-tag";
+        span_tag.textContent = "Récupération";
+        div_header.appendChild(span_tag);
+
+        let div_radio = document.createElement("div");
+        div_radio.className = "option-radio";
+        div_header.appendChild(div_radio);
+
+        let p_nom = document.createElement("p");
+        p_nom.className = "option-name";
+        p_nom.textContent = mode.nom;
+        div_card.appendChild(p_nom);
+
+        let p_prix = document.createElement("p");
+        p_prix.className = "option-price";
+        if (mode.fraisFixes == 0) {
+            p_prix.textContent = "Gratuit";
+        } else {
+            p_prix.textContent = mode.fraisFixes + " MAD";
+        }
+        div_card.appendChild(p_prix);
+
+        div_card.addEventListener("click", () => {
+            choisir_recuperation(mode);
+            recuperation_card();
+        });
+    }
+
+    recuperation_details(recuperation_choisie_id);
+}
+
+function recuperation_details(id) {
+    let div_bloc = document.createElement("div");
+    div_bloc.className = "pickup-infos";
+    info_block.appendChild(div_bloc);
+
+    let h_titre = document.createElement("h2");
+    h_titre.className = "pickup-title";
+    h_titre.textContent = "Informations de récupération";
+    div_bloc.appendChild(h_titre);
+
+    switch (id) {
+        case "agence": {
+            ajouter_champ(div_bloc, "Date", "date");
+            ajouter_champ(div_bloc, "Heure", "time");
+            break;
+        }
+        case "aeroport": {
+            ajouter_champ(div_bloc, "Aéroport", "text");
+            ajouter_champ(div_bloc, "Numéro de vol", "text");
+            ajouter_champ(div_bloc, "Date", "date");
+            ajouter_champ(div_bloc, "Heure d'arrivée", "time");
+            break;
+        }
+        case "adresse": {
+            ajouter_champ(div_bloc, "Ville", "text");
+            ajouter_champ(div_bloc, "Adresse", "text");
+            ajouter_champ(div_bloc, "Heure de livraison", "time");
+            break;
+        }
+    }
+}
+
+function ajouter_champ(parent, label, type) {
+    let div_field = document.createElement("div");
+    div_field.className = "pickup-field";
+    parent.appendChild(div_field);
+
+    let lab = document.createElement("label");
+    lab.className = "pickup-label";
+    lab.textContent = label;
+    div_field.appendChild(lab);
+
+    let inp = document.createElement("input");
+    inp.type = type;
+    inp.className = "pickup-input";
+    div_field.appendChild(inp);
 }
 
 function options_card() {
@@ -251,12 +530,16 @@ function step_display() {
 
 step_display();
 btn_next.addEventListener("click", () => {
+    if(checkout_data.date == ""){
+        alert("saisir une date");
+        return 0;
+    }
+    if(scope_step == 3){
+        btn_next.textContent = "Confirmer"
+    }
+
     next_step();
     step_display();
     composant_checkout(checkout_data);
     console.log(scope_step);
-    
-    if(scope_step == 3){
-        btn_next.textContent = "Confirmer"
-    }
 })
